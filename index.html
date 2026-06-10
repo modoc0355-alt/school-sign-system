@@ -284,7 +284,7 @@ tr:nth-child(even) td{background:var(--pale)}
     <span style="font-size:18px;flex-shrink:0">✍️</span>
     <span class="topbar-title" id="topTitle">연수 전자서명</span>
     <div class="topbar-dot" id="onlineDot" title="연결 상태"></div>
-    <button class="topbar-btn" onclick="syncAll()">🔄</button>
+
   </div>
 
   <!-- 서명 페이지 -->
@@ -670,7 +670,7 @@ function startListeners() {
 }
 
 window.syncAll = function() {
-  toast('🔄 실시간 동기화 중...');
+  toast('✅ 실시간 자동 동기화 중 — Firebase가 자동으로 최신 데이터를 유지합니다');
 };
 
 // ════════════════════════════════════════════════════
@@ -1292,7 +1292,7 @@ window.toast = function(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2800);
+  setTimeout(() => el.classList.remove('show'), 1800);
 };
 
 // 모달 외부 클릭 닫기
