@@ -894,8 +894,9 @@ function initCanvas() {
   document.getElementById('canvasHint').style.display = 'flex';
 
   const getPos = (e) => {
-    const r = canvas.getBoundingClientRect();
-    const sx = canvas.width / r.width, sy = canvas.height / r.height;
+    const cv = document.getElementById('sigCanvas');
+    const r = cv.getBoundingClientRect();
+    const sx = cv.width / r.width, sy = cv.height / r.height;
     const src = e.touches ? e.touches[0] : e;
     return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
   };
@@ -921,19 +922,26 @@ function initCanvas() {
   };
   const end = () => { drawing = false; };
 
-  // 이벤트 재등록
-  const nc = canvas.cloneNode(true);
-  canvas.parentNode.replaceChild(nc, canvas);
-  nc.addEventListener('touchstart', start, { passive: false });
-  nc.addEventListener('touchmove',  move,  { passive: false });
-  nc.addEventListener('touchend',   end);
-  nc.addEventListener('mousedown',  start);
-  nc.addEventListener('mousemove',  move);
-  nc.addEventListener('mouseup',    end);
-  nc.addEventListener('mouseleave', end);
-  // ctx 재설정
-  ctx = nc.getContext('2d');
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // 기존 이벤트 제거 후 재등록 (cloneNode 없이)
+  canvas.removeEventListener('touchstart', canvas._start);
+  canvas.removeEventListener('touchmove',  canvas._move);
+  canvas.removeEventListener('touchend',   canvas._end);
+  canvas.removeEventListener('mousedown',  canvas._start);
+  canvas.removeEventListener('mousemove',  canvas._move);
+  canvas.removeEventListener('mouseup',    canvas._end);
+  canvas.removeEventListener('mouseleave', canvas._end);
+
+  canvas._start = start;
+  canvas._move  = move;
+  canvas._end   = end;
+
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove',  move,  { passive: false });
+  canvas.addEventListener('touchend',   end);
+  canvas.addEventListener('mousedown',  start);
+  canvas.addEventListener('mousemove',  move);
+  canvas.addEventListener('mouseup',    end);
+  canvas.addEventListener('mouseleave', end);
 }
 
 window.clearCanvas = function() {
