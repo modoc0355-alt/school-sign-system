@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>연수 전자서명 시스템</title>
+<style>
+:root {
+  --navy:#1F3864; --blue:#2F5597; --sky:#4472C4;
+  --pale:#DEEAF1; --mint:#C6EFCE; --mint-t:#276221;
+  --amber:#FFD966; --orange:#ED7D31;
+  --red-bg:#FFE6CC; --red-t:#C55A11;
+  --border:#BDD7EE; --text:#1a1a2e;
+  --green:#70AD47; --green-d:#548235;
+  --purple:#7b5ea7;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;-webkit-tap-highlight-color:transparent}
+body{font-family:"맑은 고딕","Malgun Gothic","Noto Sans KR",sans-serif;
+  background:#eef2f7;color:var(--text);min-height:100vh}
+
+
+  text-transform:uppercase;letter-spacing:.5px}
+  padding:10px 12px;font-size:13px;font-family:inherit;outline:none;
+  transition:border .15s;margin-bottom:10px;background:#fff}
+  background:linear-gradient(135deg,var(--sky),var(--blue));
+  color:#fff;font-size:15px;font-weight:800;cursor:pointer;
+  font-family:inherit;transition:all .2s;margin-top:6px}
+  border-radius:8px;font-size:12px;color:#795548;line-height:1.8;
+  border:1px solid #ffe082}
+
+/* ══ TOPBAR ══ */
+.topbar{background:var(--navy);color:#fff;padding:12px 16px;
+  display:flex;align-items:center;gap:10px;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.topbar-title{font-size:15px;font-weight:700;flex:1;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.topbar-dot{width:8px;height:8px;border-radius:50%;background:#aaa;flex-shrink:0}
+.topbar-dot.online{background:#70AD47}
+.topbar-btn{font-size:11px;padding:4px 10px;border-radius:10px;
+  background:rgba(255,255,255,.15);cursor:pointer;border:none;
+  color:#fff;font-family:inherit;font-weight:600;flex-shrink:0}
+.topbar-btn:hover{background:rgba(255,255,255,.25)}
+
+/* ══ BOTTOM NAV ══ */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid #dde3ee;
+  display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:8px 4px 10px;cursor:pointer;
+  font-size:10px;font-weight:600;color:#aaa;transition:all .15s;
+  border:none;background:none;font-family:inherit;gap:2px}
+.nav-icon{font-size:22px;line-height:1.2;transition:transform .15s}
+.nav-item.active{color:var(--sky)}
+.nav-item.active .nav-icon{transform:translateY(-2px)}
+
+/* ══ PAGES ══ */
+.page{display:none;padding:16px 16px 88px;max-width:720px;margin:0 auto}
+.page.active{display:block}
+
+/* ══ CARDS ══ */
+.card{background:#fff;border-radius:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden;margin-bottom:14px}
+.card-head{background:var(--sky);color:#fff;padding:11px 14px;
+  font-size:13px;font-weight:700;display:flex;align-items:center;
+  justify-content:space-between;gap:8px}
+.card-body{padding:14px}
+.sec-title{font-size:14px;font-weight:700;color:var(--navy);
+  margin:14px 0 8px;padding-left:10px;border-left:4px solid var(--sky)}
+
+/* ══ BUTTONS ══ */
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:13px;
+  font-weight:700;cursor:pointer;font-family:inherit;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--sky);color:#fff}.btn-primary:hover{background:var(--blue)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:var(--green-d)}
+.btn-danger{background:#e74c3c;color:#fff}.btn-danger:hover{background:#c0392b}
+.btn-orange{background:var(--orange);color:#fff}
+.btn-gray{background:#e0e4ea;color:#444}.btn-gray:hover{background:#cdd2da}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:7px}
+.btn-full{width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ══ FORM ══ */
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.form-label{font-size:12px;font-weight:700;color:var(--blue)}
+.form-input{border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-size:14px;font-family:inherit;
+  outline:none;background:#fff;transition:border .15s}
+.form-input:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(68,114,196,.12)}
+.form-select{border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-size:14px;font-family:inherit;
+  outline:none;background:#fff;appearance:none;cursor:pointer;width:100%}
+textarea.form-input{resize:vertical;min-height:68px}
+
+/* ══ DEPT CHECK ══ */
+.dept-check-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.dept-check-item{display:flex;align-items:center;gap:5px;
+  background:var(--pale);border:1.5px solid var(--border);
+  border-radius:7px;padding:6px 12px;cursor:pointer;font-size:13px;transition:all .15s}
+.dept-check-item input{width:14px;height:14px;accent-color:var(--sky);cursor:pointer}
+.dept-check-item.checked{background:var(--sky);color:#fff;border-color:var(--blue)}
+
+/* ══ TABLE ══ */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--sky);color:#fff;padding:9px 10px;
+  font-weight:700;text-align:center;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid #e8edf4;
+  text-align:center;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:var(--pale)}
+
+/* ══ STATS ══ */
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat-card{flex:1;min-width:80px;background:#fff;border-radius:12px;
+  padding:12px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);
+  border-top:4px solid var(--sky);text-align:center}
+.stat-card .num{font-size:24px;font-weight:800;color:var(--navy);line-height:1.1}
+.stat-card .lbl{font-size:10px;color:#777;margin-top:2px}
+.stat-card.ok{border-top-color:var(--green)}.stat-card.ok .num{color:var(--green)}
+.stat-card.warn{border-top-color:var(--orange)}.stat-card.warn .num{color:var(--orange)}
+.prog-wrap{background:#e8edf4;border-radius:20px;height:7px;overflow:hidden;margin-top:6px}
+.prog-bar{height:100%;border-radius:20px;
+  background:linear-gradient(90deg,var(--sky),var(--green));transition:width .5s}
+
+/* ══ SIGN CANVAS ══ */
+.canvas-wrap{border:2px solid var(--border);border-radius:12px;
+  overflow:hidden;background:#fff;position:relative;touch-action:none;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.06)}
+.canvas-wrap canvas{display:block;width:100%;cursor:crosshair}
+.canvas-hint{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-size:13px;color:#ccc;pointer-events:none;
+  font-weight:600;letter-spacing:.5px}
+.canvas-tools{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.color-btn{width:30px;height:30px;border-radius:50%;border:3px solid transparent;
+  cursor:pointer;transition:all .15s;flex-shrink:0}
+.color-btn.active{border-color:var(--navy);transform:scale(1.18);
+  box-shadow:0 0 0 2px #fff,0 0 0 4px var(--navy)}
+.pen-size{display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-left:auto}
+.pen-size input{width:72px;accent-color:var(--sky)}
+
+/* ══ 스텝 서명 ══ */
+.sign-step{display:none}
+.sign-step.active{display:block}
+
+.step-indicator{display:flex;gap:6px;margin-bottom:20px;align-items:center}
+.step-dot{width:30px;height:30px;border-radius:50%;background:#e0e4ea;
+  color:#bbb;font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s;flex-shrink:0}
+.step-dot.done{background:var(--green);color:#fff}
+.step-dot.active{background:var(--sky);color:#fff;
+  box-shadow:0 0 0 4px rgba(68,114,196,.2)}
+.step-line{flex:1;height:2px;background:#e0e4ea;border-radius:2px;transition:background .3s}
+.step-line.done{background:var(--green)}
+.step-title{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.step-sub{font-size:13px;color:#999;margin-bottom:16px}
+
+/* 선택 카드 */
+.select-list{display:flex;flex-direction:column;gap:8px}
+.select-card{background:#f8faff;border:2px solid var(--border);
+  border-radius:12px;padding:14px 16px;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;gap:12px}
+.select-card:hover{border-color:var(--sky);background:#e8f2ff;transform:translateX(3px)}
+.select-card.signed-card{border-color:#aad4a0;background:#f5fff5}
+.select-card-icon{font-size:22px;flex-shrink:0}
+.select-card-name{font-size:15px;font-weight:700;color:var(--navy)}
+.select-card-sub{font-size:12px;color:#999;margin-top:2px}
+
+/* 완료 화면 */
+.success-screen{text-align:center;padding:24px 16px}
+.success-icon{font-size:72px;margin-bottom:14px;display:block;
+  animation:popIn .5s cubic-bezier(.36,.07,.19,.97)}
+@keyframes popIn{0%{transform:scale(0) rotate(-10deg)}
+  60%{transform:scale(1.15) rotate(3deg)}100%{transform:scale(1) rotate(0)}}
+.success-title{font-size:22px;font-weight:800;color:var(--mint-t);margin-bottom:8px}
+.success-sub{font-size:14px;color:#888;line-height:1.6;margin-bottom:20px}
+.success-sig-wrap{display:inline-block;background:#f8faff;
+  border:2px solid var(--mint);border-radius:14px;padding:12px 20px;margin-bottom:20px}
+.success-sig-wrap img{max-width:200px;max-height:80px;object-fit:contain}
+
+/* ══ 현황 탭 ══ */
+.t-scroll{display:flex;gap:8px;overflow-x:auto;
+  padding-bottom:6px;margin-bottom:14px;scrollbar-width:none}
+.t-scroll::-webkit-scrollbar{display:none}
+.t-pill{padding:7px 14px;border-radius:20px;background:#fff;
+  border:2px solid var(--border);font-size:12px;font-weight:700;
+  color:#777;cursor:pointer;white-space:nowrap;
+  transition:all .15s;flex-shrink:0}
+.t-pill.active{background:var(--sky);color:#fff;border-color:var(--blue)}
+
+/* 서명 그리드 */
+.sig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:10px}
+.sig-card{background:#fff;border:1.5px solid var(--border);
+  border-radius:12px;padding:10px 8px;text-align:center;transition:all .2s}
+.sig-card.s-done{border-color:#90d07a;background:#f4fff1}
+.sig-card.s-none{border-color:#ffb3b3;background:#fff8f8}
+.sig-card-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:1px}
+.sig-card-dept{font-size:10px;color:#aaa;margin-bottom:8px}
+.sig-card-img{width:100%;max-height:50px;object-fit:contain;
+  border-radius:6px;background:#f8faff;padding:2px}
+.sig-card-time{font-size:9px;color:#bbb;margin-top:3px}
+.sig-badge{font-size:11px;padding:3px 8px;border-radius:8px;
+  font-weight:700;display:inline-block;margin-top:5px}
+.sig-badge.ok{background:var(--mint);color:var(--mint-t)}
+.sig-badge.no{background:#ffd7d7;color:#9C0006}
+
+/* ══ 관리 탭 ══ */
+.dept-pill-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.dept-pill{display:flex;align-items:center;gap:5px;background:var(--pale);
+  border:1.5px solid var(--border);border-radius:16px;
+  padding:5px 12px;font-size:13px;font-weight:600;color:var(--navy)}
+.dept-pill .del{cursor:pointer;color:#bbb;font-size:15px;line-height:1}
+.dept-pill .del:hover{color:#e00}
+
+/* QR */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;
+  gap:12px;padding:20px;background:#f8faff;border-radius:14px;
+  border:2px solid var(--border)}
+.qr-desc{font-size:12px;color:#777;text-align:center;line-height:1.6}
+
+/* ══ MODAL ══ */
+.modal-overlay{display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.5);z-index:300;
+  align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;
+  padding:20px 18px 32px;width:100%;max-width:620px;
+  max-height:92vh;overflow-y:auto;
+  box-shadow:0 -4px 40px rgba(0,0,0,.2);position:relative}
+.modal h3{font-size:15px;color:var(--navy);margin-bottom:14px;font-weight:800}
+.modal-close{position:absolute;top:14px;right:14px;
+  width:28px;height:28px;border-radius:50%;border:none;
+  background:#f0f0f0;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+
+/* ══ TOAST ══ */
+#toast{position:fixed;bottom:82px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:#1a1a2e;color:#fff;padding:11px 22px;
+  border-radius:22px;font-size:13px;font-weight:600;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+  transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ══ LOADING ══ */
+.loading-ov{display:none;position:fixed;inset:0;
+  background:rgba(255,255,255,.88);z-index:500;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.loading-ov.show{display:flex}
+.spinner{width:44px;height:44px;border:4px solid var(--pale);
+  border-top-color:var(--sky);border-radius:50%;
+  animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:14px;font-weight:700;color:var(--navy)}
+
+/* ══ PRINT ══ */
+.no-print{} 
+.print-area{display:none}
+@media print{
+  body>*:not(.print-area){display:none!important}
+  .print-area{display:block!important}
+}
+
+@media(max-width:380px){
+  .sig-grid{grid-template-columns:repeat(2,1fr)}
+  .stats-row .stat-card{min-width:70px}
+  .step-title{font-size:17px}
+}
+</style>
+</head>
+<body>
+
+    
+
+<!-- ══════════════════════════════════════
+     메인 앱
+══════════════════════════════════════ -->
+<div id="mainApp">
+
+  <div class="topbar">
+    <span style="font-size:18px;flex-shrink:0">✍️</span>
+    <span class="topbar-title" id="topTitle">연수 전자서명</span>
+    <div class="topbar-dot" id="onlineDot" title="연결 상태"></div>
+    <button class="topbar-btn" onclick="syncAll()">🔄</button>
+  </div>
+
+  <!-- 서명 페이지 -->
+  <div id="page-sign" class="page active">
+
+    <!-- 스텝 1: 연수 선택 -->
+    <div class="sign-step active" id="step1">
+      <div class="step-indicator">
+        <div class="step-dot active">1</div>
+        <div class="step-line"></div>
+        <div class="step-dot">2</div>
+        <div class="step-line"></div>
+        <div class="step-dot">3</div>
+      </div>
+      <div class="step-title">연수를 선택하세요</div>
+      <div class="step-sub">서명할 연수를 탭하세요</div>
+      <div class="select-list" id="trainingSelectList">
+        <div style="text-align:center;padding:30px;color:#ccc;font-size:14px">
+          🔄 데이터를 불러오는 중...
+        </div>
+      </div>
+    </div>
+
+    <!-- 스텝 2: 성명 선택 -->
+    <div class="sign-step" id="step2">
+      <div class="step-indicator">
+        <div class="step-dot done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-dot active">2</div>
+        <div class="step-line"></div>
+        <div class="step-dot">3</div>
+      </div>
+      <div class="step-title">성명을 선택하세요</div>
+      <div class="step-sub" id="step2Sub"></div>
+      <input type="text" class="form-input" id="staffSearch"
+        placeholder="🔍 이름 검색..."
+        oninput="renderStaffSelect(this.value)"
+        style="margin-bottom:12px">
+      <div class="select-list" id="staffSelectList"></div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn btn-gray" onclick="goStep(1)">← 이전</button>
+      </div>
+    </div>
+
+    <!-- 스텝 3: 서명 -->
+    <div class="sign-step" id="step3">
+      <div class="step-indicator">
+        <div class="step-dot done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-dot done">✓</div>
+        <div class="step-line done"></div>
+        <div class="step-dot active">3</div>
+      </div>
+      <div class="step-title">서명하세요</div>
+      <div class="step-sub" id="step3Sub"></div>
+
+      <div class="card">
+        <div class="card-body" style="padding:12px">
+          <div class="canvas-wrap">
+            <canvas id="sigCanvas" height="200"></canvas>
+            <div class="canvas-hint" id="canvasHint">✍️ 손가락으로 여기에 서명하세요</div>
+          </div>
+          <div class="canvas-tools">
+            <span class="color-btn active" style="background:#1a1a2e" data-color="#1a1a2e" onclick="setPenColor(this)"></span>
+            <span class="color-btn" style="background:#1F3864" data-color="#1F3864" onclick="setPenColor(this)"></span>
+            <span class="color-btn" style="background:#c0392b" data-color="#c0392b" onclick="setPenColor(this)"></span>
+            <span class="color-btn" style="background:#27ae60" data-color="#27ae60" onclick="setPenColor(this)"></span>
+            <button class="btn btn-gray btn-sm" onclick="clearCanvas()">🗑️ 지우기</button>
+            <div class="pen-size">
+              굵기<input type="range" id="penSize" min="1" max="8" value="3"
+                oninput="penW=+this.value">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-success btn-full" onclick="submitSig()">✅ 서명 제출</button>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn btn-gray btn-sm" onclick="goStep(2)">← 이전</button>
+      </div>
+    </div>
+
+    <!-- 완료 -->
+    <div class="sign-step" id="stepDone">
+      <div class="success-screen">
+        <span class="success-icon">🎉</span>
+        <div class="success-title">서명 완료!</div>
+        <div class="success-sub" id="doneMsg"></div>
+        <div class="success-sig-wrap">
+          <img id="doneImg" src="" alt="서명 이미지">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="goStep(1)">
+          다른 연수 서명하기
+        </button>
+        <button class="btn btn-navy btn-full" style="margin-top:8px"
+          onclick="switchPage('status')">
+          📋 서명 현황 보기
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /page-sign -->
+
+  <!-- 현황/출력 페이지 -->
+  <div id="page-status" class="page">
+    <div class="sec-title">연수 선택</div>
+    <div class="t-scroll" id="statusPillBar"></div>
+    <div id="statusContent">
+      <div style="text-align:center;padding:40px;color:#ccc;font-size:14px">
+        위에서 연수를 선택하세요
+      </div>
+    </div>
+  </div>
+
+  <!-- 관리 페이지 -->
+  <div id="page-admin" class="page">
+
+    <!-- QR코드 -->
+    <div class="card">
+      <div class="card-head">📱 QR코드 배포</div>
+      <div class="card-body">
+        <div class="qr-wrap">
+          <div id="qrcode"></div>
+          <div class="qr-desc">
+            이 QR코드를 선생님들에게 배포하세요<br>
+            스캔하면 서명 화면으로 바로 연결됩니다
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+            <button class="btn btn-navy btn-sm" onclick="printQR()">🖨️ QR 인쇄</button>
+            <button class="btn btn-gray btn-sm" onclick="copyLink()">🔗 링크 복사</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 학교 설정 -->
+    <div class="card">
+      <div class="card-head">🏫 학교 설정</div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">학교명</label>
+          <input type="text" class="form-input" id="adminSchool">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveSchool()">저장</button>
+      </div>
+    </div>
+
+    <!-- 부서 관리 -->
+    <div class="card">
+      <div class="card-head">🏢 부서 관리</div>
+      <div class="card-body">
+        <div class="dept-pill-wrap" id="deptPillWrap"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" class="form-input" id="newDeptInput"
+            placeholder="부서명" style="max-width:150px;margin:0"
+            onkeydown="if(event.key==='Enter')addDept()">
+          <button class="btn btn-primary btn-sm" onclick="addDept()">➕ 추가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 연수 관리 -->
+    <div class="sec-title">연수 관리</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>연수명</th><th>날짜</th><th>참여부서</th><th>삭제</th>
+            </tr></thead>
+            <tbody id="adminTBody"></tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="openModal('trainingModal')">➕ 연수 추가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 교직원 관리 -->
+    <div class="sec-title">교직원 관리</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>성명</th><th>부서</th><th>직위</th><th>삭제</th>
+            </tr></thead>
+            <tbody id="adminSBody"></tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="openModal('staffModal')">➕ 교직원 추가</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-admin -->
+
+  <!-- 바텀 네비 -->
+  <div class="bottom-nav">
+    <button class="nav-item active" id="nav-sign" onclick="switchPage('sign')">
+      <span class="nav-icon">✍️</span>서명하기
+    </button>
+    <button class="nav-item" id="nav-status" onclick="switchPage('status')">
+      <span class="nav-icon">📋</span>현황·출력
+    </button>
+    <button class="nav-item" id="nav-admin" onclick="switchPage('admin')">
+      <span class="nav-icon">⚙️</span>관리
+    </button>
+  </div>
+
+</div><!-- /mainApp -->
+
+<!-- ══ MODALS ══ -->
+<div class="modal-overlay" id="trainingModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('trainingModal')">✕</button>
+    <h3>📋 연수 추가</h3>
+    <div class="form-group">
+      <label class="form-label">연수명 *</label>
+      <input type="text" class="form-input" id="m_tname" placeholder="학교폭력 예방 교원 연수">
+    </div>
+    <div class="form-group">
+      <label class="form-label">연수 내용</label>
+      <textarea class="form-input" id="m_tcontent" placeholder="연수 내용 간략히 입력"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">날짜</label>
+      <input type="text" class="form-input" id="m_tdate" placeholder="2026-06-10">
+    </div>
+    <div class="form-group">
+      <label class="form-label">담당자</label>
+      <input type="text" class="form-input" id="m_tmgr">
+    </div>
+    <div class="form-group">
+      <label class="form-label">참여 부서 * <span style="font-weight:400;color:#999">(선택한 부서만 서명 대상)</span></label>
+      <div class="dept-check-grid" id="m_deptChecks"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">비고</label>
+      <input type="text" class="form-input" id="m_tnote">
+    </div>
+    <div class="actions" style="justify-content:flex-end">
+      <button class="btn btn-gray" onclick="closeModal('trainingModal')">취소</button>
+      <button class="btn btn-primary" onclick="addTraining()">추가</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="staffModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('staffModal')">✕</button>
+    <h3>👤 교직원 추가</h3>
+    <div class="form-group">
+      <label class="form-label">성명 *</label>
+      <input type="text" class="form-input" id="m_sname">
+    </div>
+    <div class="form-group">
+      <label class="form-label">부서 *</label>
+      <select class="form-select" id="m_sdept"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">직위</label>
+      <input type="text" class="form-input" id="m_srank" placeholder="교사, 부장교사, 교감 등">
+    </div>
+    <div class="actions" style="justify-content:flex-end">
+      <button class="btn btn-gray" onclick="closeModal('staffModal')">취소</button>
+      <button class="btn btn-primary" onclick="addStaff()">추가</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="delSigModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('delSigModal')">✕</button>
+    <h3>⚠️ 서명 삭제</h3>
+    <p style="font-size:14px;color:#555;margin-bottom:16px" id="delSigMsg"></p>
+    <div class="actions" style="justify-content:flex-end">
+      <button class="btn btn-gray" onclick="closeModal('delSigModal')">취소</button>
+      <button class="btn btn-danger" onclick="confirmDelSig()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-ov" id="loadingOv">
+  <div class="spinner"></div>
+  <div class="loading-txt" id="loadingTxt">불러오는 중...</div>
+</div>
+<div id="toast"></div>
+<div class="print-area" id="printArea"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, remove, onValue, push }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ════════════════════════════════════════════════════
+//  전역 상태
+// ════════════════════════════════════════════════════
+let db, firebaseApp;
+let appData = { school:'', trainings:{}, staff:{}, signatures:{}, departments:[] };
+let selTraining = null, selStaff = null;
+let statusTid = null, delSigTarget = null;
+let penColor = '#1a1a2e', penW = 3;
+let drawing = false, hasDrawn = false, lastX = 0, lastY = 0, ctx = null;
+
+// ════════════════════════════════════════════════════
+//  Firebase 설정값 (미리 설정됨 — 변경 불필요)
+// ════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyA_mW1PIl-UY_PZB6xwxzt3bZAQ9-GwVAM",
+  authDomain:        "school-sign-system-e9086.firebaseapp.com",
+  databaseURL:       "https://school-sign-system-e9086-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "school-sign-system-e9086",
+  storageBucket:     "school-sign-system-e9086.firebasestorage.app",
+  messagingSenderId: "1057915246154",
+  appId:             "1:1057915246154:web:5fa71d9397560306a878b3"
+};
+
+// ════════════════════════════════════════════════════
+//  초기화 — QR 스캔 시 설정 화면 없이 바로 연결
+// ════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  loadQRLib();
+  initFirebase(FIREBASE_CONFIG);
+});
+
+function loadConfig() { return FIREBASE_CONFIG; }
+function saveConfig(cfg) {}  // 하드코딩이므로 저장 불필요
+
+window.connectFirebase = function() {
+  initFirebase(FIREBASE_CONFIG);
+};
+
+function initFirebase(cfg) {
+  
+  try {
+    firebaseApp = initializeApp(cfg);
+    db = getDatabase(firebaseApp);
+    showMain(cfg.school || '연수 전자서명');
+    startListeners();
+    if (cfg.school) {
+      set(ref(db, 'settings/school'), cfg.school).catch(() => {});
+    }
+  } catch(e) {
+    alert('Firebase 연결 실패: ' + e.message + '\n설정값을 다시 확인해주세요.');
+  }
+}
+
+function showMain(school) {
+  
+  document.getElementById('topTitle').textContent = school || '연수 전자서명';
+  document.getElementById('adminSchool').value = school || '';
+  generateQR();
+}
+
+
+
+// ════════════════════════════════════════════════════
+//  Firebase 실시간 리스너
+// ════════════════════════════════════════════════════
+function startListeners() {
+  // 전체 데이터 실시간 수신
+  onValue(ref(db, '/'), snap => {
+    const val = snap.val() || {};
+    appData.school      = val.settings?.school || '';
+    appData.trainings   = val.trainings   || {};
+    appData.staff       = val.staff       || {};
+    appData.signatures  = val.signatures  || {};
+    appData.departments = val.departments || [];
+
+    document.getElementById('topTitle').textContent = appData.school || '연수 전자서명';
+    document.getElementById('adminSchool').value = appData.school || '';
+    document.getElementById('onlineDot').className = 'topbar-dot online';
+
+    renderAll();
+  }, err => {
+    document.getElementById('onlineDot').className = 'topbar-dot';
+    toast('❌ 연결 오류: ' + err.message);
+  });
+}
+
+window.syncAll = function() {
+  toast('🔄 실시간 동기화 중...');
+};
+
+// ════════════════════════════════════════════════════
+//  렌더링
+// ════════════════════════════════════════════════════
+function renderAll() {
+  renderTrainingSelect();
+  renderStatusPills();
+  renderAdminTrainings();
+  renderAdminStaff();
+  renderDepts();
+  if (statusTid) renderStatusContent(statusTid);
+}
+
+// ─ 연수 선택 목록 ─
+function renderTrainingSelect() {
+  const list = document.getElementById('trainingSelectList');
+  const ts = Object.values(appData.trainings).filter(t => t.active !== false);
+  if (!ts.length) {
+    list.innerHTML = '<div style="text-align:center;color:#ccc;padding:30px;font-size:14px">📋 등록된 연수가 없습니다<br><small style="font-size:11px">관리 탭에서 연수를 추가하세요</small></div>';
+    return;
+  }
+  list.innerHTML = ts.map(t => {
+    const sigs = appData.signatures[t.id] || {};
+    const targets = staffTargets(t);
+    const done = targets.filter(s => sigs[s.id]).length;
+    return `<div class="select-card" onclick="selectTraining('${t.id}')">
+      <span class="select-card-icon">📋</span>
+      <div>
+        <div class="select-card-name">${t.name}</div>
+        <div class="select-card-sub">${t.date || '날짜 미정'} · ${t.mgr ? t.mgr + ' 담당' : ''} · 서명 ${done}/${targets.length}명</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─ 교직원 선택 ─
+window.renderStaffSelect = function(filter = '') {
+  const list = document.getElementById('staffSelectList');
+  if (!selTraining) return;
+  let targets = staffTargets(selTraining);
+  if (filter) targets = targets.filter(s =>
+    s.name.includes(filter) || s.dept.includes(filter));
+  if (!targets.length) {
+    list.innerHTML = '<div style="text-align:center;color:#ccc;padding:20px">검색 결과 없음</div>';
+    return;
+  }
+  const sigs = appData.signatures[selTraining.id] || {};
+  list.innerHTML = targets.map(s => {
+    const signed = !!sigs[s.id];
+    return `<div class="select-card ${signed ? 'signed-card' : ''}"
+      onclick="selectStaff('${s.id}')">
+      <span class="select-card-icon">${signed ? '✅' : '👤'}</span>
+      <div>
+        <div class="select-card-name">${s.name}</div>
+        <div class="select-card-sub">${s.dept} · ${s.rank}${signed ? ' · 이미 서명함' : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+// ─ 현황 pill ─
+function renderStatusPills() {
+  const ts = Object.values(appData.trainings).filter(t => t.active !== false);
+  document.getElementById('statusPillBar').innerHTML = ts.map(t =>
+    `<div class="t-pill ${statusTid === t.id ? 'active' : ''}"
+      onclick="selectStatusT('${t.id}')">${t.name}</div>`
+  ).join('');
+}
+
+// ─ 현황 콘텐츠 ─
+window.selectStatusT = function(tid) {
+  statusTid = tid;
+  renderStatusPills();
+  renderStatusContent(tid);
+};
+
+function renderStatusContent(tid) {
+  const t = appData.trainings[tid];
+  if (!t) return;
+  const targets = staffTargets(t);
+  const sigs    = appData.signatures[tid] || {};
+  const done    = targets.filter(s => sigs[s.id]).length;
+  const total   = targets.length;
+  const pct     = total ? Math.round(done / total * 100) : 0;
+  const missing = targets.filter(s => !sigs[s.id]);
+
+  document.getElementById('statusContent').innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card ok"><div class="num">${done}</div><div class="lbl">서명완료</div></div>
+      <div class="stat-card warn"><div class="num">${total - done}</div><div class="lbl">미서명</div></div>
+      <div class="stat-card"><div class="num">${total}</div><div class="lbl">전체인원</div></div>
+      <div class="stat-card" style="flex:2;min-width:120px">
+        <div class="num" style="color:var(--sky)">${pct}%</div>
+        <div class="lbl" style="margin-bottom:4px">완료율</div>
+        <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+
+    ${missing.length ? `
+    <div style="background:var(--red-bg);border:1px solid #f4b183;border-radius:10px;
+      padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--red-t)">
+      <strong>⚠️ 미서명 (${missing.length}명):</strong>
+      ${missing.map(s => `<span style="margin-left:6px;font-weight:700">${s.name}</span>`).join('')}
+    </div>` : `
+    <div style="background:var(--mint);border:1px solid #82c96e;border-radius:10px;
+      padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--mint-t)">
+      <strong>✅ 전원 서명 완료!</strong>
+    </div>`}
+
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="btn btn-navy btn-sm" onclick="printSign('${tid}')">🖨️ 확인서 출력</button>
+    </div>
+
+    <div class="sig-grid">
+      ${targets.map(s => {
+        const sig = sigs[s.id];
+        return `<div class="sig-card ${sig ? 's-done' : 's-none'}">
+          <div class="sig-card-name">${s.name}</div>
+          <div class="sig-card-dept">${s.dept} · ${s.rank}</div>
+          ${sig
+            ? `<img class="sig-card-img" src="${sig.image}" alt="서명">
+               <div class="sig-card-time">${sig.timestamp || ''}</div>
+               <div class="sig-badge ok">✅ 완료</div>
+               <br>
+               <button class="btn btn-danger btn-sm" style="margin-top:6px;font-size:10px"
+                 onclick="promptDelSig('${tid}','${s.id}','${s.name}')">🗑️ 삭제</button>`
+            : `<div class="sig-badge no">⬜ 미서명</div>`
+          }
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ─ 관리 탭 ─
+function renderAdminTrainings() {
+  document.getElementById('adminTBody').innerHTML =
+    Object.values(appData.trainings).map(t => `
+      <tr>
+        <td style="text-align:left;font-weight:600">${t.name}
+          <div style="font-size:11px;color:#999;font-weight:400">${t.content || ''}</div></td>
+        <td>${t.date || ''}</td>
+        <td style="font-size:11px">${(t.depts || []).join(', ')}</td>
+        <td><button class="btn btn-danger btn-sm"
+          onclick="delTraining('${t.id}')">✕</button></td>
+      </tr>`).join('') || '<tr><td colspan="4" style="color:#ccc">없음</td></tr>';
+}
+
+function renderAdminStaff() {
+  document.getElementById('adminSBody').innerHTML =
+    Object.values(appData.staff).map(s => `
+      <tr>
+        <td style="font-weight:600">${s.name}</td>
+        <td>${s.dept}</td>
+        <td>${s.rank}</td>
+        <td><button class="btn btn-danger btn-sm"
+          onclick="delStaff('${s.id}')">✕</button></td>
+      </tr>`).join('') || '<tr><td colspan="4" style="color:#ccc">없음</td></tr>';
+}
+
+function renderDepts() {
+  const depts = appData.departments || [];
+  document.getElementById('deptPillWrap').innerHTML = depts.map(d => `
+    <div class="dept-pill">
+      <span>${d}</span>
+      <span class="del" onclick="delDept('${d}')">×</span>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+//  스텝 이동
+// ════════════════════════════════════════════════════
+window.goStep = function(n) {
+  document.querySelectorAll('.sign-step').forEach(s => s.classList.remove('active'));
+  if (n === 1) {
+    document.getElementById('step1').classList.add('active');
+    selTraining = null; selStaff = null;
+    document.getElementById('staffSearch').value = '';
+    renderTrainingSelect();
+  } else if (n === 2) {
+    document.getElementById('step2').classList.add('active');
+    document.getElementById('step2Sub').textContent = '📋 ' + selTraining.name;
+    renderStaffSelect();
+  } else if (n === 3) {
+    document.getElementById('step3').classList.add('active');
+    document.getElementById('step3Sub').textContent =
+      `${selTraining.name} · ${selStaff.name} (${selStaff.dept})`;
+    initCanvas();
+  } else if (n === 4) {
+    document.getElementById('stepDone').classList.add('active');
+  }
+};
+
+window.selectTraining = function(tid) {
+  selTraining = appData.trainings[tid];
+  goStep(2);
+};
+
+window.selectStaff = function(sid) {
+  selStaff = appData.staff[sid];
+  const sigs = appData.signatures[selTraining?.id] || {};
+  if (sigs[sid]) {
+    if (!confirm(`${selStaff.name} 선생님은 이미 서명하셨습니다.\n다시 서명하시겠습니까?`)) return;
+  }
+  goStep(3);
+};
+
+// ════════════════════════════════════════════════════
+//  서명 캔버스
+// ════════════════════════════════════════════════════
+function initCanvas() {
+  const canvas = document.getElementById('sigCanvas');
+  const wrap   = canvas.parentElement;
+  canvas.width  = wrap.clientWidth || 340;
+  canvas.height = 200;
+  ctx = canvas.getContext('2d');
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hasDrawn = false;
+  document.getElementById('canvasHint').style.display = 'flex';
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const sx = canvas.width / r.width, sy = canvas.height / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
+  };
+
+  const start = (e) => {
+    e.preventDefault();
+    drawing = true; hasDrawn = true;
+    document.getElementById('canvasHint').style.display = 'none';
+    const { x, y } = getPos(e);
+    lastX = x; lastY = y;
+    ctx.beginPath();
+    ctx.arc(x, y, penW / 2, 0, Math.PI * 2);
+    ctx.fillStyle = penColor; ctx.fill();
+  };
+  const move = (e) => {
+    e.preventDefault();
+    if (!drawing) return;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
+    ctx.strokeStyle = penColor; ctx.lineWidth = penW; ctx.stroke();
+    lastX = x; lastY = y;
+  };
+  const end = () => { drawing = false; };
+
+  // 이벤트 재등록
+  const nc = canvas.cloneNode(true);
+  canvas.parentNode.replaceChild(nc, canvas);
+  nc.addEventListener('touchstart', start, { passive: false });
+  nc.addEventListener('touchmove',  move,  { passive: false });
+  nc.addEventListener('touchend',   end);
+  nc.addEventListener('mousedown',  start);
+  nc.addEventListener('mousemove',  move);
+  nc.addEventListener('mouseup',    end);
+  nc.addEventListener('mouseleave', end);
+  // ctx 재설정
+  ctx = nc.getContext('2d');
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+}
+
+window.clearCanvas = function() {
+  const canvas = document.getElementById('sigCanvas');
+  if (!canvas) return;
+  ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hasDrawn = false;
+  document.getElementById('canvasHint').style.display = 'flex';
+};
+
+window.setPenColor = function(el) {
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  penColor = el.dataset.color;
+};
+
+// ════════════════════════════════════════════════════
+//  서명 제출
+// ════════════════════════════════════════════════════
+window.submitSig = async function() {
+  if (!hasDrawn)                  { toast('⚠️ 서명을 먼저 해주세요'); return; }
+  if (!selTraining || !selStaff)  { toast('오류: 다시 시작해주세요'); return; }
+
+  const canvas = document.getElementById('sigCanvas');
+  const image  = canvas.toDataURL('image/png');
+  const now    = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+  const path   = `signatures/${selTraining.id}/${selStaff.id}`;
+
+  showLoad('서명 저장 중...');
+  try {
+    await set(ref(db, path), {
+      image,
+      timestamp: now,
+      name: selStaff.name,
+      dept: selStaff.dept
+    });
+    hideLoad();
+    document.getElementById('doneMsg').textContent =
+      `${selStaff.name} 선생님 서명이 저장되었습니다 (${now})`;
+    document.getElementById('doneImg').src = image;
+    goStep(4);
+    toast('✅ 서명이 완료되었습니다!');
+  } catch(e) {
+    hideLoad();
+    toast('❌ 저장 실패: ' + e.message);
+  }
+};
+
+// ════════════════════════════════════════════════════
+//  서명 삭제
+// ════════════════════════════════════════════════════
+window.promptDelSig = function(tid, sid, name) {
+  delSigTarget = { tid, sid };
+  document.getElementById('delSigMsg').textContent =
+    `${name} 선생님의 서명을 삭제하시겠습니까?`;
+  openModal('delSigModal');
+};
+
+window.confirmDelSig = async function() {
+  if (!delSigTarget) return;
+  showLoad('삭제 중...');
+  try {
+    await remove(ref(db, `signatures/${delSigTarget.tid}/${delSigTarget.sid}`));
+    hideLoad();
+    closeModal('delSigModal');
+    toast('서명이 삭제되었습니다');
+    delSigTarget = null;
+  } catch(e) {
+    hideLoad();
+    toast('❌ 삭제 실패: ' + e.message);
+  }
+};
+
+// ════════════════════════════════════════════════════
+//  확인서 출력
+// ════════════════════════════════════════════════════
+window.printSign = function(tid) {
+  const t       = appData.trainings[tid];
+  const targets = staffTargets(t);
+  const sigs    = appData.signatures[tid] || {};
+  const school  = appData.school || '';
+
+  const rows = targets.map((s, i) => {
+    const sig = sigs[s.id];
+    return `<tr>
+      <td style="border:1px solid #bbb;padding:6px 8px;text-align:center">${i + 1}</td>
+      <td style="border:1px solid #bbb;padding:6px 8px;font-weight:700">${s.name}</td>
+      <td style="border:1px solid #bbb;padding:6px 8px">${s.dept}</td>
+      <td style="border:1px solid #bbb;padding:6px 8px">${s.rank}</td>
+      <td style="border:1px solid #bbb;padding:4px 8px;text-align:center;
+        min-width:110px;background:${sig ? '#C6EFCE' : '#fff'}">
+        ${sig ? `<img src="${sig.image}" style="max-width:100px;max-height:44px;object-fit:contain">` : ''}
+      </td>
+      <td style="border:1px solid #bbb;padding:6px 8px;text-align:center;
+        font-size:11px;color:#777">${sig?.timestamp || ''}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('printArea').innerHTML = `
+    <div style="font-family:'맑은 고딕',sans-serif;padding:24px">
+      <h2 style="text-align:center;margin-bottom:4px;font-size:18px">${school}</h2>
+      <h3 style="text-align:center;color:#1F3864;margin-bottom:10px;font-size:15px">연수 서명 확인서</h3>
+      <table style="border-collapse:collapse;margin:0 auto 10px;font-size:12px">
+        <tr>
+          <td style="padding:3px 10px"><strong>연수명:</strong> ${t.name}</td>
+          <td style="padding:3px 10px"><strong>날짜:</strong> ${t.date || '—'}</td>
+          <td style="padding:3px 10px"><strong>담당자:</strong> ${t.mgr || '—'}</td>
+        </tr>
+      </table>
+      <table style="border-collapse:collapse;width:100%;font-size:12px">
+        <thead><tr style="background:#1F3864;color:#fff">
+          <th style="border:1px solid #bbb;padding:7px 8px">번호</th>
+          <th style="border:1px solid #bbb;padding:7px 8px">성명</th>
+          <th style="border:1px solid #bbb;padding:7px 8px">부서</th>
+          <th style="border:1px solid #bbb;padding:7px 8px">직위</th>
+          <th style="border:1px solid #bbb;padding:7px 8px;min-width:120px">서명</th>
+          <th style="border:1px solid #bbb;padding:7px 8px">서명 일시</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="text-align:right;margin-top:10px;font-size:10px;color:#aaa">
+        출력일: ${new Date().toLocaleDateString('ko-KR')}</p>
+    </div>`;
+  window.print();
+};
+
+// ════════════════════════════════════════════════════
+//  관리 기능
+// ════════════════════════════════════════════════════
+window.saveSchool = async function() {
+  const school = document.getElementById('adminSchool').value.trim();
+  if (!school) { toast('학교명을 입력하세요'); return; }
+  showLoad('저장 중...');
+  try {
+    await set(ref(db, 'settings/school'), school);
+    hideLoad();
+    toast('✅ 학교명이 저장되었습니다');
+  } catch(e) { hideLoad(); toast('❌ 저장 실패'); }
+};
+
+window.addDept = async function() {
+  const inp = document.getElementById('newDeptInput');
+  const v = inp.value.trim();
+  if (!v) return;
+  const depts = [...(appData.departments || [])];
+  if (depts.includes(v)) { toast('이미 있는 부서입니다'); return; }
+  depts.push(v); inp.value = '';
+  await set(ref(db, 'departments'), depts);
+  toast('부서가 추가되었습니다');
+};
+
+window.delDept = async function(name) {
+  if (!confirm(`'${name}' 부서를 삭제하시겠습니까?`)) return;
+  const depts = (appData.departments || []).filter(d => d !== name);
+  await set(ref(db, 'departments'), depts);
+  toast('삭제되었습니다');
+};
+
+window.openModal = function(id) {
+  if (id === 'trainingModal') {
+    ['m_tname','m_tcontent','m_tdate','m_tmgr','m_tnote'].forEach(x =>
+      document.getElementById(x).value = '');
+    document.getElementById('m_deptChecks').innerHTML =
+      (appData.departments || []).map(d => `
+        <label class="dept-check-item checked">
+          <input type="checkbox" value="${d}" checked
+            onchange="this.parentElement.classList.toggle('checked',this.checked)">
+          ${d}
+        </label>`).join('');
+  }
+  if (id === 'staffModal') {
+    ['m_sname','m_srank'].forEach(x => document.getElementById(x).value = '');
+    document.getElementById('m_sdept').innerHTML =
+      (appData.departments || []).map(d => `<option>${d}</option>`).join('');
+  }
+  document.getElementById(id).classList.add('open');
+};
+
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('open');
+};
+
+window.addTraining = async function() {
+  const name = document.getElementById('m_tname').value.trim();
+  if (!name) { alert('연수명을 입력하세요'); return; }
+  const depts = [...document.querySelectorAll('#m_deptChecks input:checked')]
+    .map(e => e.value);
+  if (!depts.length) { alert('참여 부서를 선택하세요'); return; }
+  const id = 'T' + Date.now();
+  showLoad('추가 중...');
+  try {
+    await set(ref(db, `trainings/${id}`), {
+      id, name, active: true,
+      content: document.getElementById('m_tcontent').value.trim(),
+      date:    document.getElementById('m_tdate').value.trim() || '미정',
+      mgr:     document.getElementById('m_tmgr').value.trim(),
+      depts,
+      note:    document.getElementById('m_tnote').value.trim()
+    });
+    hideLoad();
+    closeModal('trainingModal');
+    toast('✅ 연수가 추가되었습니다');
+  } catch(e) { hideLoad(); toast('❌ 추가 실패'); }
+};
+
+window.delTraining = async function(id) {
+  if (!confirm('이 연수를 삭제하시겠습니까?')) return;
+  showLoad('삭제 중...');
+  try {
+    await remove(ref(db, `trainings/${id}`));
+    hideLoad(); toast('✅ 삭제되었습니다');
+  } catch(e) { hideLoad(); toast('❌ 삭제 실패'); }
+};
+
+window.addStaff = async function() {
+  const name = document.getElementById('m_sname').value.trim();
+  if (!name) { alert('성명을 입력하세요'); return; }
+  const id = 'S' + Date.now();
+  showLoad('추가 중...');
+  try {
+    await set(ref(db, `staff/${id}`), {
+      id, name,
+      dept: document.getElementById('m_sdept').value,
+      rank: document.getElementById('m_srank').value.trim()
+    });
+    hideLoad();
+    closeModal('staffModal');
+    toast('✅ 교직원이 추가되었습니다');
+  } catch(e) { hideLoad(); toast('❌ 추가 실패'); }
+};
+
+window.delStaff = async function(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  showLoad('삭제 중...');
+  try {
+    await remove(ref(db, `staff/${id}`));
+    hideLoad(); toast('✅ 삭제되었습니다');
+  } catch(e) { hideLoad(); toast('❌ 삭제 실패'); }
+};
+
+// ════════════════════════════════════════════════════
+//  QR코드
+// ════════════════════════════════════════════════════
+function loadQRLib() {
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  s.onload = generateQR;
+  document.head.appendChild(s);
+}
+
+function generateQR() {
+  const wrap = document.getElementById('qrcode');
+  if (!wrap || typeof QRCode === 'undefined') return;
+  wrap.innerHTML = '';
+  const url = window.location.href.split('?')[0];
+  try {
+    new QRCode(wrap, {
+      text: url, width: 200, height: 200,
+      colorDark: '#1F3864', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e) {}
+}
+
+window.printQR = function() {
+  const img = document.querySelector('#qrcode img');
+  const school = appData.school || '';
+  if (!img) { alert('QR코드가 아직 생성되지 않았습니다'); return; }
+  document.getElementById('printArea').innerHTML = `
+    <div style="font-family:'맑은 고딕',sans-serif;text-align:center;padding:40px">
+      <h2 style="margin-bottom:6px">${school}</h2>
+      <h3 style="color:#1F3864;margin-bottom:24px">연수 전자서명 시스템</h3>
+      <img src="${img.src}" style="width:220px;height:220px;
+        border:4px solid #1F3864;border-radius:12px;padding:8px">
+      <p style="margin-top:20px;font-size:14px;color:#555">
+        QR코드를 스캔하면 서명 화면으로 연결됩니다
+      </p>
+      <p style="margin-top:6px;font-size:12px;color:#999">${window.location.href.split('?')[0]}</p>
+    </div>`;
+  window.print();
+};
+
+window.copyLink = function() {
+  const url = window.location.href.split('?')[0];
+  navigator.clipboard.writeText(url)
+    .then(() => toast('🔗 링크가 복사되었습니다'))
+    .catch(() => toast('복사 실패 — 주소창에서 직접 복사하세요'));
+};
+
+// ════════════════════════════════════════════════════
+//  페이지 전환
+// ════════════════════════════════════════════════════
+window.switchPage = function(name) {
+  ['sign','status','admin'].forEach(p => {
+    document.getElementById('page-' + p).classList.remove('active');
+    document.getElementById('nav-' + p).classList.remove('active');
+  });
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'status') renderStatusPills();
+};
+
+// ════════════════════════════════════════════════════
+//  유틸
+// ════════════════════════════════════════════════════
+function staffTargets(t) {
+  const all = Object.values(appData.staff);
+  if (!t.depts || !t.depts.length) return all;
+  return all.filter(s => t.depts.includes(s.dept));
+}
+
+function showLoad(msg = '처리 중...') {
+  document.getElementById('loadingTxt').textContent = msg;
+  document.getElementById('loadingOv').classList.add('show');
+}
+function hideLoad() { document.getElementById('loadingOv').classList.remove('show'); }
+
+window.toast = function(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+};
+
+// 모달 외부 클릭 닫기
+document.querySelectorAll('.modal-overlay').forEach(m =>
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
+);
+
+</script>
+</body>
+</html>
