@@ -1,1 +1,1 @@
-# school-sign-system
+# sign-system
