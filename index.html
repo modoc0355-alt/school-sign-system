@@ -284,7 +284,7 @@ tr:nth-child(even) td{background:var(--pale)}
     <span style="font-size:18px;flex-shrink:0">✍️</span>
     <span class="topbar-title" id="topTitle">연수 전자서명</span>
     <div class="topbar-dot" id="onlineDot" title="연결 상태"></div>
-
+    <button class="topbar-btn" onclick="syncAll()">🔄</button>
   </div>
 
   <!-- 서명 페이지 -->
@@ -670,7 +670,7 @@ function startListeners() {
 }
 
 window.syncAll = function() {
-  toast('✅ 실시간 자동 동기화 중 — Firebase가 자동으로 최신 데이터를 유지합니다');
+  toast('🔄 실시간 동기화 중...');
 };
 
 // ════════════════════════════════════════════════════
@@ -883,102 +883,74 @@ window.selectStaff = function(sid) {
 //  서명 캔버스
 // ════════════════════════════════════════════════════
 function initCanvas() {
-  // 약간의 딜레이로 DOM이 완전히 렌더된 후 실행
-  setTimeout(() => {
-    const canvas = document.getElementById('sigCanvas');
-    if (!canvas) return;
-    const wrap = canvas.parentElement;
-    canvas.width  = wrap.clientWidth || 340;
-    canvas.height = 200;
-    ctx = canvas.getContext('2d');
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hasDrawn = false;
+  const canvas = document.getElementById('sigCanvas');
+  const wrap   = canvas.parentElement;
+  canvas.width  = wrap.clientWidth || 340;
+  canvas.height = 200;
+  ctx = canvas.getContext('2d');
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hasDrawn = false;
+  document.getElementById('canvasHint').style.display = 'flex';
 
-    const hint = document.getElementById('canvasHint');
-    if (hint) hint.style.display = 'flex';
+  const getPos = (e) => {
+    const cv = document.getElementById('sigCanvas');
+    const r = cv.getBoundingClientRect();
+    const sx = cv.width / r.width, sy = cv.height / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
+  };
 
-    function getPos(e) {
-      const r = canvas.getBoundingClientRect();
-      const sx = canvas.width / r.width;
-      const sy = canvas.height / r.height;
-      const src = e.touches ? e.touches[0] : e;
-      return {
-        x: (src.clientX - r.left) * sx,
-        y: (src.clientY - r.top)  * sy
-      };
-    }
+  const start = (e) => {
+    e.preventDefault();
+    drawing = true; hasDrawn = true;
+    document.getElementById('canvasHint').style.display = 'none';
+    const { x, y } = getPos(e);
+    lastX = x; lastY = y;
+    ctx.beginPath();
+    ctx.arc(x, y, penW / 2, 0, Math.PI * 2);
+    ctx.fillStyle = penColor; ctx.fill();
+  };
+  const move = (e) => {
+    e.preventDefault();
+    if (!drawing) return;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
+    ctx.strokeStyle = penColor; ctx.lineWidth = penW; ctx.stroke();
+    lastX = x; lastY = y;
+  };
+  const end = () => { drawing = false; };
 
-    function onStart(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      drawing = true;
-      hasDrawn = true;
-      const hint = document.getElementById('canvasHint');
-      if (hint) hint.style.display = 'none';
-      const pos = getPos(e);
-      lastX = pos.x; lastY = pos.y;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, penW / 2, 0, Math.PI * 2);
-      ctx.fillStyle = penColor;
-      ctx.fill();
-    }
+  // 기존 이벤트 제거 후 재등록 (cloneNode 없이)
+  canvas.removeEventListener('touchstart', canvas._start);
+  canvas.removeEventListener('touchmove',  canvas._move);
+  canvas.removeEventListener('touchend',   canvas._end);
+  canvas.removeEventListener('mousedown',  canvas._start);
+  canvas.removeEventListener('mousemove',  canvas._move);
+  canvas.removeEventListener('mouseup',    canvas._end);
+  canvas.removeEventListener('mouseleave', canvas._end);
 
-    function onMove(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!drawing) return;
-      const pos = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle = penColor;
-      ctx.lineWidth = penW;
-      ctx.stroke();
-      lastX = pos.x;
-      lastY = pos.y;
-    }
+  canvas._start = start;
+  canvas._move  = move;
+  canvas._end   = end;
 
-    function onEnd(e) {
-      drawing = false;
-    }
-
-    // 기존 이벤트 완전 제거 후 새로 등록
-    const fresh = canvas.cloneNode(false);
-    fresh.id = 'sigCanvas';
-    fresh.width  = canvas.width;
-    fresh.height = canvas.height;
-    canvas.parentNode.replaceChild(fresh, canvas);
-
-    ctx = fresh.getContext('2d');
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    fresh.style.touchAction = 'none';
-    fresh.addEventListener('touchstart', onStart, { passive: false });
-    fresh.addEventListener('touchmove',  onMove,  { passive: false });
-    fresh.addEventListener('touchend',   onEnd,   { passive: false });
-    fresh.addEventListener('pointerdown', onStart, { passive: false });
-    fresh.addEventListener('pointermove', onMove,  { passive: false });
-    fresh.addEventListener('pointerup',   onEnd);
-    fresh.addEventListener('pointerleave',onEnd);
-    fresh.addEventListener('mousedown',  onStart);
-    fresh.addEventListener('mousemove',  onMove);
-    fresh.addEventListener('mouseup',    onEnd);
-    fresh.addEventListener('mouseleave', onEnd);
-  }, 100);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove',  move,  { passive: false });
+  canvas.addEventListener('touchend',   end);
+  canvas.addEventListener('mousedown',  start);
+  canvas.addEventListener('mousemove',  move);
+  canvas.addEventListener('mouseup',    end);
+  canvas.addEventListener('mouseleave', end);
 }
 
 window.clearCanvas = function() {
   const canvas = document.getElementById('sigCanvas');
   if (!canvas) return;
   ctx = canvas.getContext('2d');
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   hasDrawn = false;
-  const hint = document.getElementById('canvasHint');
-  if (hint) hint.style.display = 'flex';
+  document.getElementById('canvasHint').style.display = 'flex';
 };
 
 window.setPenColor = function(el) {
@@ -1292,7 +1264,7 @@ window.toast = function(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 1800);
+  setTimeout(() => el.classList.remove('show'), 2800);
 };
 
 // 모달 외부 클릭 닫기
