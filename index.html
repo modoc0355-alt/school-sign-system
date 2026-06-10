@@ -653,47 +653,36 @@ let penColor = '#1a1a2e', penW = 3;
 let drawing = false, hasDrawn = false, lastX = 0, lastY = 0, ctx = null;
 
 // ════════════════════════════════════════════════════
-//  초기화
+//  Firebase 설정값 (미리 설정됨 — 변경 불필요)
+// ════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyA_mW1PIl-UY_PZB6xwxzt3bZAQ9-GwVAM",
+  authDomain:        "school-sign-system-e9086.firebaseapp.com",
+  databaseURL:       "https://school-sign-system-e9086-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "school-sign-system-e9086",
+  storageBucket:     "school-sign-system-e9086.firebasestorage.app",
+  messagingSenderId: "1057915246154",
+  appId:             "1:1057915246154:web:5fa71d9397560306a878b3"
+};
+
+// ════════════════════════════════════════════════════
+//  초기화 — QR 스캔 시 설정 화면 없이 바로 연결
 // ════════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  const cfg = loadConfig();
-  if (cfg) {
-    initFirebase(cfg);
-  }
-  // QR 라이브러리 동적 로드
   loadQRLib();
+  initFirebase(FIREBASE_CONFIG);
 });
 
-function loadConfig() {
-  const raw = localStorage.getItem('fb_cfg');
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
-}
-
-function saveConfig(cfg) {
-  localStorage.setItem('fb_cfg', JSON.stringify(cfg));
-}
+function loadConfig() { return FIREBASE_CONFIG; }
+function saveConfig(cfg) {}  // 하드코딩이므로 저장 불필요
 
 window.connectFirebase = function() {
-  const cfg = {
-    school:        document.getElementById('s_school').value.trim(),
-    apiKey:        document.getElementById('s_apiKey').value.trim(),
-    authDomain:    document.getElementById('s_authDomain').value.trim(),
-    databaseURL:   document.getElementById('s_dbUrl').value.trim(),
-    projectId:     document.getElementById('s_projectId').value.trim(),
-    storageBucket: document.getElementById('s_storageBucket').value.trim(),
-    messagingSenderId: document.getElementById('s_senderId').value.trim(),
-    appId:         document.getElementById('s_appId').value.trim(),
-  };
-  if (!cfg.apiKey || !cfg.databaseURL) {
-    alert('API Key와 Database URL은 필수입니다.');
-    return;
-  }
-  saveConfig(cfg);
-  initFirebase(cfg);
+  initFirebase(FIREBASE_CONFIG);
 };
 
 function initFirebase(cfg) {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
   try {
     firebaseApp = initializeApp(cfg);
     db = getDatabase(firebaseApp);
